@@ -30,6 +30,14 @@ class HueClient:
     def clientkey(self):
         return self._clientkey
 
+    def set_streaming_active(self, group_id, active):
+        uri = f'http://{self.bridge_ip}/api/{self.username}/groups/{group_id}'
+        req = requests.put(uri, json={'stream':{'active':active}})
+        response = req.json()[0]
+        if 'error' in response:
+            (errtype, errdesc) = self._error_info(response)
+            print(f'[HueClient] failed to activate streaming mode: ({errtype} – {errdesc})')
+
     def reset(self):
         self._username = None
         self._clientkey = None
