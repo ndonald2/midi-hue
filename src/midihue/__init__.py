@@ -1,2 +1,1 @@
-from .hue import HueClient
-from .test import main
+from .hue import HueClient, HueStream
