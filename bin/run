@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import midihue
 from midihue.hue import HueClient, HueStream
 
 client = HueClient()
