@@ -9,6 +9,10 @@ DISCOVERY_URI = 'https://discovery.meethue.com'
 DEVICETYPE = 'midi-hue'
 
 
+class HueClientError(Exception):
+    pass
+
+
 class HueClient:
 
     def __init__(self, bridge_ip=None):
@@ -38,8 +42,9 @@ class HueClient:
         req = requests.put(uri, json={'stream': {'active': active}})
         response = req.json()[0]
         if 'error' in response:
-            (errtype, errdesc) = self._error_info(response)
-            print(f'[HueClient] failed to activate stream mode: ({errtype} – {errdesc})')
+            raise HueClientError(
+                'Failed to activate stream mode: ({errtype} – {errdesc})'
+            )
 
     def reset(self):
         self._username = None
@@ -66,9 +71,12 @@ class HueClient:
         except KeyError:
             (errtype, errdesc) = self._error_info(response)
             if errtype == 101:
-                print('Please press the button on the Hue bridge and try again')
+                print('Please press the button on the ' +
+                      'Hue bridge and try again')
             else:
-                print(f'[HueClient] failed to create user: ({errtype} – {errdesc})')
+                raise HueClientError(
+                    'Failed to create user: ({errtype} – {errdesc})'
+                )
 
     def _read_credentials(self):
         try:
@@ -104,6 +112,11 @@ class HueStream:
         self.client.set_stream_mode(self.group_id, False)
         self._disconnect()
 
+    def send(self, dgram):
+        assert self._socket is not None, \
+            'Must start stream before sending data'
+        self._socket.send(dgram)
+
     # Private
 
     def _connect(self):
@@ -123,7 +136,7 @@ class HueStream:
         )
 
         dtls_cli.connect((self.client.bridge_ip, 2100))
-        print('[HueStream] socket connected, starting DTLS handshake...')
+        print('[HueStream] Socket connected, starting DTLS handshake...')
 
         handshook = False
         handshake_tries = 0
