@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='MIDIHue',
+    name='midi-hue',
     version='0.0.1',
     author='Nick Donaldson',
     author_email='ndonald2@gmail.com',
