@@ -97,16 +97,17 @@ def make_datagram(value):
 
 # ------
 
-bridge_ip = discover_ip()
-username, clientkey = create_user(bridge_ip)
-if username is None:
-    exit(1)
-set_streaming_active(bridge_ip, username, GROUP_ID, True)
-client = connect_dtls(bridge_ip, username, clientkey)
+def main():
+    bridge_ip = discover_ip()
+    username, clientkey = create_user(bridge_ip)
+    if username is None:
+        exit(1)
+    set_streaming_active(bridge_ip, username, GROUP_ID, True)
+    client = connect_dtls(bridge_ip, username, clientkey)
 
-t = 0
-speed = 3000
-while True:
-    client.send(make_datagram(t))
-    t = (t + speed) & 0xFFFF
-    time.sleep(1.0/30.0)
+    t = 0
+    speed = 3000
+    while True:
+        client.send(make_datagram(t))
+        t = (t + speed) & 0xFFFF
+        time.sleep(1.0/30.0)
