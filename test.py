@@ -2,6 +2,7 @@ import json
 import os
 import requests as req
 import socket
+import time
 from mbedtls import tls
 
 CREDENTIALS_PATH = '.credentials'
@@ -39,7 +40,7 @@ def create_user(bridge_ip):
 
         # Write JSON
         with open(CREDENTIALS_PATH, 'w') as file:
-            json.dump(success, file) 
+            json.dump(success, file)
 
         username = success.get('username')
         clientkey = success.get('clientkey')
@@ -70,7 +71,7 @@ def connect_dtls(hostname, username, secret):
         try:
             dtls_cli.do_handshake()
         except tls.WantReadError:
-            handshake_tries +=1 
+            handshake_tries += 1
             continue
         handshook = True
         break
@@ -80,9 +81,32 @@ def connect_dtls(hostname, username, secret):
     else:
         print('Failed to handshake')
 
+    return dtls_cli
+
+def make_datagram(value):
+    # Hard coded light ID with red depth
+    return b'HueStream' + \
+            b'\x01\x00' + \
+            b'\x00' + \
+            b'\x00\x00' + \
+            b'\x00' + \
+            b'\x00' + \
+            b'\x00\x00\x03' + \
+            value.to_bytes(2, byteorder='big') + \
+            b'\x00\x00\x00\x00'
+
+# ------
+
 bridge_ip = discover_ip()
 username, clientkey = create_user(bridge_ip)
 if username is None:
     exit(1)
 set_streaming_active(bridge_ip, username, GROUP_ID, True)
-connect_dtls(bridge_ip, username, clientkey)
+client = connect_dtls(bridge_ip, username, clientkey)
+
+t = 0
+speed = 3000
+while True:
+    client.send(make_datagram(t))
+    t = (t + speed) & 0xFFFF
+    time.sleep(1.0/30.0)
