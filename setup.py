@@ -10,7 +10,9 @@ setup(
     packages=find_packages(where='src'),
     python_requires='>=3.6',
     install_requires=[
+        'mido',
         'python-mbedtls',
+        'python-rtmidi',
         'requests'
     ],
     extras_require={
