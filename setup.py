@@ -12,5 +12,8 @@ setup(
     install_requires=[
         'python-mbedtls',
         'requests'
-    ]
+    ],
+    extras_require={
+        'dev': ['flake8', 'autopep8']
+    }
 )
