@@ -1,2 +1,10 @@
-.credentials
+# Compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Packaging
+*.egg-info/
+
+# Version management
 .python-version
