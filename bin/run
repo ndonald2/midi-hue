@@ -1,7 +1,39 @@
 #!/usr/bin/env python
 
+import time
 from midihue.hue import HueClient, HueStream
 
+
+GROUP_ID = 2
+
+
+# TODO: Move to dedicated classes
+def make_datagram(v1, v2):
+    # Hard coded light IDs for two lights
+    # with modulated red amount
+    return b'HueStream' + \
+            b'\x01\x00' + \
+            b'\x00' + \
+            b'\x00\x00' + \
+            b'\x00' + \
+            b'\x00' + \
+            b'\x00\x00\x03' + \
+            v1.to_bytes(2, byteorder='big') + \
+            b'\x00\x00\x00\x00' + \
+            b'\x00\x00\x04' + \
+            v2.to_bytes(2, byteorder='big') + \
+            b'\x00\x00\x00\x00'
+
+
 client = HueClient()
-stream = HueStream(2, client)
+stream = HueStream(GROUP_ID, client)
 stream.start()
+
+t1 = 0
+t2 = 32768
+speed = 3000
+while True:
+    stream.send(make_datagram(t1, t2))
+    t1 = (t1 + speed) & 0xFFFF
+    t2 = (t2 + speed) & 0xFFFF
+    time.sleep(1.0/25.0)
