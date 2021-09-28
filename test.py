@@ -1,11 +1,15 @@
 import json
 import os
 import requests as req
+import socket
+from mbedtls import tls
 
 CREDENTIALS_PATH = '.credentials'
 DISCOVERY_URI = 'https://discovery.meethue.com'
 DEVICETYPE = 'midi-hue'
 GROUP_ID = 2
+
+## REST API
 
 def discover_ip():
     r = req.get(DISCOVERY_URI)
@@ -41,5 +45,44 @@ def create_user(bridge_ip):
         clientkey = success.get('clientkey')
         return (username, clientkey)
 
+def set_streaming_active(bridge_ip, username, group_id, active):
+    uri = f'http://{bridge_ip}/api/{username}/groups/{group_id}'
+    r = req.put(uri, json={'stream':{'active':active}})
+    print(r.json())
+
+## DTLS / SOCKET
+def connect_dtls(hostname, username, secret):
+    cli_conf = tls.DTLSConfiguration(
+        pre_shared_key=(username, bytes.fromhex(secret))
+    )
+    cli_ctx = tls.ClientContext(cli_conf)
+    dtls_cli = cli_ctx.wrap_socket(
+        socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
+        server_hostname=None
+    )
+
+    dtls_cli.connect((hostname,2100))
+    print('connected')
+
+    handshook = False
+    handshake_tries = 0
+    while handshake_tries < 3:
+        try:
+            dtls_cli.do_handshake()
+        except tls.WantReadError:
+            handshake_tries +=1 
+            continue
+        handshook = True
+        break
+
+    if handshook:
+        print('Handshook!')
+    else:
+        print('Failed to handshake')
+
 bridge_ip = discover_ip()
 username, clientkey = create_user(bridge_ip)
+if username is None:
+    exit(1)
+set_streaming_active(bridge_ip, username, GROUP_ID, True)
+connect_dtls(bridge_ip, username, clientkey)
