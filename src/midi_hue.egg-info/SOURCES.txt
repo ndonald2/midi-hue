@@ -1,9 +1,0 @@
-pyproject.toml
-setup.py
-src/midi_hue.egg-info/PKG-INFO
-src/midi_hue.egg-info/SOURCES.txt
-src/midi_hue.egg-info/dependency_links.txt
-src/midi_hue.egg-info/requires.txt
-src/midi_hue.egg-info/top_level.txt
-src/midihue/__init__.py
-src/midihue/test.py
