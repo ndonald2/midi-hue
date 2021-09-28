@@ -1,10 +1,13 @@
 import os
 import json
+import socket
 import requests
+from mbedtls import tls
 
 CREDENTIALS_PATH = os.path.expanduser('~/.midihue')
 DISCOVERY_URI = 'https://discovery.meethue.com'
 DEVICETYPE = 'midi-hue'
+
 
 class HueClient:
 
@@ -16,7 +19,7 @@ class HueClient:
 
     @property
     def bridge_ip(self):
-        if self._bridge_ip != None:
+        if self._bridge_ip is not None:
             return self._bridge_ip
         req = requests.get(DISCOVERY_URI)
         self._bridge_ip = req.json()[0].get('internalipaddress')
@@ -30,13 +33,13 @@ class HueClient:
     def clientkey(self):
         return self._clientkey
 
-    def set_streaming_active(self, group_id, active):
+    def set_stream_mode(self, group_id, active):
         uri = f'http://{self.bridge_ip}/api/{self.username}/groups/{group_id}'
-        req = requests.put(uri, json={'stream':{'active':active}})
+        req = requests.put(uri, json={'stream': {'active': active}})
         response = req.json()[0]
         if 'error' in response:
             (errtype, errdesc) = self._error_info(response)
-            print(f'[HueClient] failed to activate streaming mode: ({errtype} – {errdesc})')
+            print(f'[HueClient] failed to activate stream mode: ({errtype} – {errdesc})')
 
     def reset(self):
         self._username = None
@@ -69,7 +72,7 @@ class HueClient:
 
     def _read_credentials(self):
         try:
-            with open(CREDENTIALS_PATH,'r') as file:
+            with open(CREDENTIALS_PATH, 'r') as file:
                 data = json.load(file)
                 self._username = data['username']
                 self._clientkey = data['clientkey']
@@ -84,3 +87,62 @@ class HueClient:
     def _error_info(self, response):
         error = response.get('error')
         return (error.get('type'), error.get('description'))
+
+
+class HueStream:
+
+    def __init__(self, group_id, client):
+        self.group_id = group_id
+        self.client = client
+        self._socket = None
+
+    def start(self):
+        self.client.set_stream_mode(self.group_id, True)
+        self._connect()
+
+    def stop(self):
+        self.client.set_stream_mode(self.group_id, False)
+        self._disconnect()
+
+    # Private
+
+    def _connect(self):
+        if self._socket is not None:
+            self._disconnect()
+
+        cli_conf = tls.DTLSConfiguration(
+            pre_shared_key=(
+                self.client.username,
+                bytes.fromhex(self.client.clientkey)
+            )
+        )
+        cli_ctx = tls.ClientContext(cli_conf)
+        dtls_cli = cli_ctx.wrap_socket(
+            socket.socket(socket.AF_INET, socket.SOCK_DGRAM),
+            server_hostname=None
+        )
+
+        dtls_cli.connect((self.client.bridge_ip, 2100))
+        print('[HueStream] socket connected, starting DTLS handshake...')
+
+        handshook = False
+        handshake_tries = 0
+        while handshake_tries < 3:
+            try:
+                dtls_cli.do_handshake()
+            except tls.WantReadError:
+                handshake_tries += 1
+                continue
+            handshook = True
+            break
+
+        if handshook:
+            print('[HueStream] DTLS handshake succeeded')
+        else:
+            print('[HueStream] DTLS handshake failed')
+
+        self._socket = dtls_cli
+
+    def _disconnect(self):
+        self._socket.close()
+        self._socket = None

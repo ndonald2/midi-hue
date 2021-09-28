@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
 import midihue
+from midihue.hue import HueClient, HueStream
 
-midihue.test.main()
+client = HueClient()
+stream = HueStream(2, client)
+stream.start()
