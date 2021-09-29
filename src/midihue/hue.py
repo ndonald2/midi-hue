@@ -101,7 +101,14 @@ class HueStream:
 
     class Message:
 
-        _HEADER = b'HueStream' + \
+        # 1. Protocol (must be 'HueStream')
+        # 2. Stream API version (1.0) - 2 bytes
+        # 3. Sequence ID (ignored) - 1 Byte
+        # 4. Reserved (must be 0) - 2 bytes
+        # 5. Color space (RGB) - 1 byte
+        # 6. Reserved (must be 0) 1 byte
+        _HEADER = \
+            b'HueStream' + \
             b'\x01\x00' + \
             b'\x00' + \
             b'\x00\x00' + \
