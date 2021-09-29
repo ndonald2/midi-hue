@@ -45,30 +45,30 @@ def main(light_group, input_name):
     _loop(inport, stream)
 
 
+# Temporary hard coded mapping
+# Next big TODO: make this configurable
 def _loop(inport, stream):
     v1 = 0
     v2 = 0
     v3 = 0
 
-    def handle_midi(msg):
-        global v1, v2, v3
-        if msg.type == 'control_change':
-            if msg.control == 77:
-                v1 = msg.value << 9
-            elif msg.control == 78:
-                v2 = msg.value << 9
-            elif msg.control == 79:
-                v3 = msg.value << 9
-
     while True:
         for msg in inport.iter_pending():
-            handle_midi(msg)
+            if msg.type == 'control_change':
+                if msg.control == 77:
+                    v1 = msg.value << 9
+                elif msg.control == 78:
+                    v2 = msg.value << 9
+                elif msg.control == 79:
+                    v3 = msg.value << 9
+
         streammsg = HueStream.Message()
         streammsg.add(light_id=3, rgb=[0, v1, 0])
         streammsg.add(light_id=4, rgb=[0, 0, v2])
         streammsg.add(light_id=10, rgb=[v3, 0, 0])
         stream.send(streammsg)
         time.sleep(0.01)
+
 
 if __name__ == '__main__':
     main()
