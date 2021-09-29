@@ -99,6 +99,31 @@ class HueClient:
 
 class HueStream:
 
+    class Message:
+
+        _HEADER = b'HueStream' + \
+            b'\x01\x00' + \
+            b'\x00' + \
+            b'\x00\x00' + \
+            b'\x00' + \
+            b'\x00'
+
+        def __init__(self):
+            self._lightdata = {}
+
+        @property
+        def bytes(self):
+            b = self._HEADER
+            for light_id, rgb in self._lightdata.items():
+                b += b'\x00' + light_id.to_bytes(2, byteorder='big')
+                b += rgb[0].to_bytes(2, byteorder='big')
+                b += rgb[1].to_bytes(2, byteorder='big')
+                b += rgb[2].to_bytes(2, byteorder='big')
+            return b
+
+        def add(self, light_id, rgb):
+            self._lightdata[int(light_id)] = rgb
+
     def __init__(self, group_id, client):
         self.group_id = group_id
         self.client = client
@@ -112,10 +137,10 @@ class HueStream:
         self.client.set_stream_mode(self.group_id, False)
         self._disconnect()
 
-    def send(self, dgram):
+    def send(self, message):
         assert self._socket is not None, \
             'Must start stream before sending data'
-        self._socket.send(dgram)
+        self._socket.send(message.bytes)
 
     # Private
 

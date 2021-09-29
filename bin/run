@@ -1,39 +1,33 @@
 #!/usr/bin/env python
 
 import time
+import mido
 from midihue import HueClient, HueStream
 
 
 GROUP_ID = 2
 
-
-# TODO: Move to dedicated classes
-def make_datagram(v1, v2):
-    # Hard coded light IDs for two lights
-    # with modulated red amount
-    return b'HueStream' + \
-            b'\x01\x00' + \
-            b'\x00' + \
-            b'\x00\x00' + \
-            b'\x00' + \
-            b'\x00' + \
-            b'\x00\x00\x03' + \
-            v1.to_bytes(2, byteorder='big') + \
-            b'\x00\x00\x00\x00' + \
-            b'\x00\x00\x04' + \
-            v2.to_bytes(2, byteorder='big') + \
-            b'\x00\x00\x00\x00'
-
-
 client = HueClient()
 stream = HueStream(GROUP_ID, client)
 stream.start()
 
-t1 = 0
-t2 = 32768
-speed = 3000
+v1 = 0
+v2 = 0
+def handle_midi(msg):
+    global v1, v2
+    if msg.control == 77:
+        v1 = msg.value << 9
+    elif msg.control == 78:
+        v2 = msg.value << 9
+
+
+inport = mido.open_input('Launch Control XL')
+
 while True:
-    stream.send(make_datagram(t1, t2))
-    t1 = (t1 + speed) & 0xFFFF
-    t2 = (t2 + speed) & 0xFFFF
-    time.sleep(1.0/25.0)
+    for msg in inport.iter_pending():
+        handle_midi(msg)
+    streammsg = HueStream.Message()
+    streammsg.add(light_id=3, rgb=[v1, v2, 0])
+    streammsg.add(light_id=4, rgb=[v2, v1, 0])
+    stream.send(streammsg)
+    time.sleep(0.01)
