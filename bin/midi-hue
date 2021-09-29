@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import midihue
+
+cli = midihue.cli.MidiHueCLI()
+cli.run()
