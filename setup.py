@@ -10,10 +10,9 @@ setup(
     packages=find_packages(where='src'),
     python_requires='>=3.6',
     install_requires=[
-        'mido',
-        'python-mbedtls',
-        'python-rtmidi',
-        'requests'
+        'mido[ports]>=1.2.10',
+        'python-mbedtls>=1.5',
+        'requests>=2.26'
     ],
     extras_require={
         'dev': ['flake8', 'autopep8']

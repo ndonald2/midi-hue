@@ -12,12 +12,12 @@ charset-normalizer==2.0.6
     # via requests
 idna==3.2
     # via requests
-mido==1.2.10
+mido[ports]==1.2.10
     # via midi-hue (setup.py)
 python-mbedtls==1.5.1
     # via midi-hue (setup.py)
 python-rtmidi==1.4.9
-    # via midi-hue (setup.py)
+    # via mido
 requests==2.26.0
     # via midi-hue (setup.py)
 urllib3==1.26.7
