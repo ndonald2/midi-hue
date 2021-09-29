@@ -23,8 +23,11 @@ def main(light_group, input_name):
     client = HueClient()
 
     if light_group is None:
-        # TODO: List groups from API
-        light_group = click.prompt('\nEnter ID of light group to control',
+        groups = client.get_entertainment_groups()
+        groups_formatted = '\n'.join([f'{gid}. {desc}' for gid, desc
+                                     in groups])
+        light_group = click.prompt('\nEnter ID of light group to control\n\n'
+                                   f'{groups_formatted}\n\nGroup ID',
                                    type=int)
 
     if input_name is None:

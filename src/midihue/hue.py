@@ -37,8 +37,22 @@ class HueClient:
     def clientkey(self):
         return self._clientkey
 
+    def get_entertainment_groups(self):
+        """Returns an array of available entertainment groups in the format
+        of a tuple: (id, description)
+        """
+        uri = f'{self._base_uri}/groups'
+        req = requests.get(uri)
+        groups = []
+        for gid, info in req.json().items():
+            if info['type'] == 'Entertainment':
+                name = info['name']
+                n_lights = len(info['lights'])
+                groups.append((gid, f'{name} ({n_lights} lights)'))
+        return groups
+
     def set_stream_mode(self, group_id, active):
-        uri = f'http://{self.bridge_ip}/api/{self.username}/groups/{group_id}'
+        uri = f'{self._base_uri}/groups/{group_id}'
         req = requests.put(uri, json={'stream': {'active': active}})
         response = req.json()[0]
         if 'error' in response:
@@ -53,6 +67,10 @@ class HueClient:
         self._find_or_create_user()
 
     # Private
+
+    @property
+    def _base_uri(self):
+        return f'http://{self.bridge_ip}/api/{self.username}'
 
     def _find_or_create_user(self):
         if self._read_credentials():
