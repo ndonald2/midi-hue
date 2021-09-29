@@ -17,5 +17,7 @@ setup(
     extras_require={
         'dev': ['flake8', 'autopep8']
     },
-    scripts=['bin/midi-hue']
+    entry_points={
+        'console_scripts': ['midi-hue=midihue.cli:main']
+    }
 )

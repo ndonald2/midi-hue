@@ -40,3 +40,8 @@ class MidiHueCLI:
             streammsg.add(light_id=10, rgb=[v3, 0, 0])
             stream.send(streammsg)
             time.sleep(0.01)
+
+
+def main():
+    cli = MidiHueCLI()
+    cli.run()
