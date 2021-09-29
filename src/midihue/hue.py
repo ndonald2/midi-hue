@@ -42,8 +42,9 @@ class HueClient:
         req = requests.put(uri, json={'stream': {'active': active}})
         response = req.json()[0]
         if 'error' in response:
+            errtype, errdesc = self._error_info(response)
             raise HueClientError(
-                'Failed to activate stream mode: ({errtype} – {errdesc})'
+                f'Failed to activate stream mode: ({errtype} – {errdesc})'
             )
 
     def reset(self):
@@ -73,9 +74,10 @@ class HueClient:
             if errtype == 101:
                 print('Please press the button on the ' +
                       'Hue bridge and try again')
+                exit(1)
             else:
                 raise HueClientError(
-                    'Failed to create user: ({errtype} – {errdesc})'
+                    f'Failed to create user: ({errtype} – {errdesc})'
                 )
 
     def _read_credentials(self):
