@@ -10,6 +10,7 @@ setup(
     packages=find_packages(where='src'),
     python_requires='>=3.6',
     install_requires=[
+        'click>=8.0',
         'mido[ports]>=1.2.10',
         'python-mbedtls>=1.5',
         'requests>=2.26'

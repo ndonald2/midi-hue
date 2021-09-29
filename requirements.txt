@@ -10,6 +10,8 @@ certifi==2021.5.30
     #   requests
 charset-normalizer==2.0.6
     # via requests
+click==8.0.1
+    # via midi-hue (setup.py)
 idna==3.2
     # via requests
 mido[ports]==1.2.10
