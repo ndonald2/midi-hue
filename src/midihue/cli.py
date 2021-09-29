@@ -1,29 +1,38 @@
 import time
 import click
 import mido
-from .hue import HueClient, HueStream
+from .hue import HueClient, HueStream, DEFAULT_CREDENTIALS_PATH
 
 
 @click.command()
+@click.option('--credentials-path',
+              default=DEFAULT_CREDENTIALS_PATH,
+              show_default=True,
+              type=click.Path(exists=False),
+              help="Path to the file where Hue user credentials "
+                   "are loaded/stored.")
 @click.option('--light-group',
               default=None,
               type=int,
               help="The ID of the light group you want to control "
-                   "on your Hue bridge. Must be an Entertainment group. "
-                   "Leaving this option blank will prompt you with a list.")
+                   "on your Hue bridge. Must be an Entertainment group. ")
 @click.option('--input-name',
               default=None,
               type=str,
               help="The name of the MIDI input from which to "
-                   "observe messages. Leaving this option blank will "
-                   "propmt you with a list")
-def main(light_group, input_name):
+                   "observe messages.")
+def main(light_group, input_name, credentials_path):
     """Programmable MIDI control over Philips Hue lights"""
 
-    client = HueClient()
+    client = HueClient(credentials_path=credentials_path)
 
     if light_group is None:
         groups = client.get_entertainment_groups()
+        if not groups:
+            print("No Entertainment groups found on your Hue bridge. "
+                  "Please use the Hue app to create one and try again.")
+            exit(0)
+
         groups_formatted = '\n'.join([f'{gid}. {desc}' for gid, desc
                                      in groups])
         light_group = click.prompt('\nEnter ID of light group to control\n\n'

@@ -4,7 +4,7 @@ import socket
 import requests
 from mbedtls import tls
 
-CREDENTIALS_PATH = os.path.expanduser('~/.midihue')
+DEFAULT_CREDENTIALS_PATH = '~/.midihue'
 DISCOVERY_URI = 'https://discovery.meethue.com'
 DEVICETYPE = 'midi-hue'
 
@@ -15,7 +15,10 @@ class HueClientError(Exception):
 
 class HueClient:
 
-    def __init__(self, bridge_ip=None):
+    def __init__(self,
+                 credentials_path=DEFAULT_CREDENTIALS_PATH,
+                 bridge_ip=None):
+        self._credentials_path = os.path.expanduser(credentials_path)
         self._bridge_ip = bridge_ip
         self._username = None
         self._clientkey = None
@@ -100,7 +103,7 @@ class HueClient:
 
     def _read_credentials(self):
         try:
-            with open(CREDENTIALS_PATH, 'r') as file:
+            with open(self._credentials_path, 'r') as file:
                 data = json.load(file)
                 self._username = data['username']
                 self._clientkey = data['clientkey']
@@ -109,7 +112,7 @@ class HueClient:
             return False
 
     def _write_credentials(self, content):
-        with open(CREDENTIALS_PATH, 'w+') as file:
+        with open(self._credentials_path, 'w+') as file:
             json.dump(content, file)
 
     def _error_info(self, response):
