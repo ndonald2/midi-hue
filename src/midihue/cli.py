@@ -1,47 +1,71 @@
 import time
+import click
 import mido
 from .hue import HueClient, HueStream
 
 
-class MidiHueCLI:
+@click.command()
+@click.option('--light-group',
+              default=None,
+              type=int,
+              help="The ID of the light group you want to control "
+                   "on your Hue bridge. Must be an Entertainment group. "
+                   "Leaving this option blank will prompt you with a list.")
+@click.option('--input-name',
+              default=None,
+              type=str,
+              help="The name of the MIDI input from which to "
+                   "observe messages. Leaving this option blank will "
+                   "propmt you with a list")
+def main(light_group, input_name):
+    """Programmable MIDI control over Philips Hue lights"""
 
-    # Temporarily hardcoded
-    GROUP_ID = 2
+    client = HueClient()
 
-    def __init__(self):
-        pass
+    if light_group is None:
+        # TODO: List groups from API
+        light_group = click.prompt('\nEnter ID of light group to control',
+                                   type=int)
 
-    def run(self):
-        v1 = 0
-        v2 = 0
-        v3 = 0
+    if input_name is None:
+        inputs = mido.get_input_names()
+        inputs_formatted = '\n'.join([f'{idx}. {name}' for idx, name
+                                      in enumerate(inputs)])
+        input_index = click.prompt(f'\nChoose a MIDI input\n\n'
+                                   f'{inputs_formatted}\n\nInput', type=int)
+        input_name = inputs[input_index]
 
-        client = HueClient()
-        stream = HueStream(self.GROUP_ID, client)
-        stream.start()
-        inport = mido.open_input('IAC Driver IAC Bus 1')
+    stream = HueStream(light_group, client)
+    stream.start()
+    inport = mido.open_input(input_name)
 
-        def handle_midi(msg):
-            global v1, v2, v3
-            if msg.type == 'control_change':
-                if msg.control == 77:
-                    v1 = msg.value << 9
-                elif msg.control == 78:
-                    v2 = msg.value << 9
-                elif msg.control == 79:
-                    v3 = msg.value << 9
-
-        while True:
-            for msg in inport.iter_pending():
-                handle_midi(msg)
-            streammsg = HueStream.Message()
-            streammsg.add(light_id=3, rgb=[0, v1, 0])
-            streammsg.add(light_id=4, rgb=[0, 0, v2])
-            streammsg.add(light_id=10, rgb=[v3, 0, 0])
-            stream.send(streammsg)
-            time.sleep(0.01)
+    _loop(inport, stream)
 
 
-def main():
-    cli = MidiHueCLI()
-    cli.run()
+def _loop(inport, stream):
+    v1 = 0
+    v2 = 0
+    v3 = 0
+
+    def handle_midi(msg):
+        global v1, v2, v3
+        if msg.type == 'control_change':
+            if msg.control == 77:
+                v1 = msg.value << 9
+            elif msg.control == 78:
+                v2 = msg.value << 9
+            elif msg.control == 79:
+                v3 = msg.value << 9
+
+    while True:
+        for msg in inport.iter_pending():
+            handle_midi(msg)
+        streammsg = HueStream.Message()
+        streammsg.add(light_id=3, rgb=[0, v1, 0])
+        streammsg.add(light_id=4, rgb=[0, 0, v2])
+        streammsg.add(light_id=10, rgb=[v3, 0, 0])
+        stream.send(streammsg)
+        time.sleep(0.01)
+
+if __name__ == '__main__':
+    main()
