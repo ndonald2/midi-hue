@@ -152,6 +152,7 @@ class HueStream:
             return b
 
         def add(self, light_id, rgb):
+            assert len(rgb) == 3
             self._lightdata[int(light_id)] = rgb
 
     def __init__(self, group_id, client):
