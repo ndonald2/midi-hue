@@ -17,7 +17,7 @@ setup(
     ],
     extras_require={
         'dev': ['flake8', 'autopep8'],
-        'test': ['pytest>=6.2']
+        'test': ['pytest>=6.2', 'requests-mock>=1.9']
     },
     entry_points={
         'console_scripts': ['midi-hue=midihue.cli:main']
