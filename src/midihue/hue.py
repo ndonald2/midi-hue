@@ -80,6 +80,7 @@ class HueClient:
             return
 
         # Else need to create an authorized user with API
+        print(self.bridge_ip)
         uri = f'http://{self.bridge_ip}/api'
         body = {'devicetype': DEVICETYPE, 'generateclientkey': True}
         req = requests.post(uri, json=body)
@@ -108,7 +109,11 @@ class HueClient:
                 self._username = data['username']
                 self._clientkey = data['clientkey']
                 return True
+        except json.decoder.JSONDecodeError:
+            return False
         except FileNotFoundError:
+            return False
+        except KeyError:
             return False
 
     def _write_credentials(self, content):
