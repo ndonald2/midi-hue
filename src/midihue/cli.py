@@ -48,9 +48,9 @@ def main(light_group, input_name, credentials_path):
         input_name = inputs[input_index]
 
     stream = HueStream(light_group, client)
-    stream.start()
     inport = mido.open_input(input_name)
 
+    stream.start()
     _loop(inport, stream)
 
 
@@ -77,7 +77,3 @@ def _loop(inport, stream):
         streammsg.add(light_id=10, rgb=[v3, 0, 0])
         stream.send(streammsg)
         time.sleep(0.01)
-
-
-if __name__ == '__main__':
-    main()
