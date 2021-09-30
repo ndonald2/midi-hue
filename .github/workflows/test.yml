@@ -15,6 +15,9 @@ jobs:
       with:
         python-version: '3.x'
 
+    - name: Install OS Dependencies
+      run: sudo apt-get install -y libasound2-dev
+
     - name: Install Package
       run: pip install -e .[test]
 
