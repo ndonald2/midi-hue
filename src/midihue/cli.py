@@ -72,8 +72,8 @@ def _loop(inport, stream):
                     v3 = msg.value << 9
 
         streammsg = HueStream.Message()
-        streammsg.add(light_id=3, rgb=[0, v1, 0])
-        streammsg.add(light_id=4, rgb=[0, 0, v2])
-        streammsg.add(light_id=10, rgb=[v3, 0, 0])
+        streammsg.add(light_id=3, rgb=(0, v1, 0))
+        streammsg.add(light_id=4, rgb=(0, 0, v2))
+        streammsg.add(light_id=10, rgb=(v3, 0, 0))
         stream.send(streammsg)
         time.sleep(0.01)
