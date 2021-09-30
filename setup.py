@@ -16,7 +16,7 @@ setup(
         'requests>=2.26'
     ],
     extras_require={
-        'dev': ['flake8', 'autopep8'],
+        'dev': ['flake8', 'autopep8', 'pip-tools'],
         'test': ['pytest>=6.2', 'requests-mock>=1.9']
     },
     entry_points={
