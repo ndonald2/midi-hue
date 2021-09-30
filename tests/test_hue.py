@@ -35,7 +35,7 @@ def mock_api(bridge_ip, username, clientkey, requests_mock):
                             }}])
 
 
-@pytest.mark.usefixtures('client', 'bridge_ip', 'mock_api')
+@pytest.mark.usefixtures('mock_api')
 class TestHueClient:
 
     @pytest.fixture
@@ -60,8 +60,9 @@ class TestHueClient:
     def test_override_bridge_ip(self, mock_open_auth):
         assert HueClient(bridge_ip='127.0.0.1').bridge_ip == '127.0.0.1'
 
-    def test_fetch_bridge_ip(self, client, bridge_ip):
-        assert client.bridge_ip == bridge_ip
+    def test_fetch_bridge_ip(self, client_auth, bridge_ip, requests_mock):
+        assert client_auth.bridge_ip == bridge_ip
+        assert requests_mock.call_count == 1
 
     def test_cache_bridge_ip(self, client, bridge_ip, requests_mock):
         # Access once to fetch/cache
@@ -70,17 +71,28 @@ class TestHueClient:
                           json=[{'internalipaddress': '0.0.0.0'}])
         assert client.bridge_ip == bridge_ip
 
-    def test_create_user(self, client, mock_open,
+    def test_create_user(self, client, mock_open, requests_mock,
                          creds_path, username, clientkey):
+
         mock_open.assert_any_call(creds_path, 'r')
         mock_open.assert_any_call(creds_path, 'w+')
+
+        # One to fetch bridge ip, one to create user
+        assert requests_mock.call_count == 2
+
+        last_req = requests_mock.request_history[-1]
+        assert last_req.method == 'POST'
+        assert last_req.url.endswith('/api')
+
         assert client.username == username
         assert client.clientkey == clientkey
 
-    def test_load_user(self, client_auth, mock_open_auth,
+    def test_load_user(self, client_auth, mock_open_auth, requests_mock,
                        creds_path, username, clientkey):
         # should be last call - no call to write
         mock_open_auth.assert_called_with(creds_path, 'r')
+        assert requests_mock.call_count == 0
+
         assert client_auth.username == username
         assert client_auth.clientkey == clientkey
 
