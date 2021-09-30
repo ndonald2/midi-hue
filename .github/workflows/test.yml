@@ -15,14 +15,9 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Log some stuff
-      run: |
-        python --version
-        pip --version
-
     - name: Install Package
       run: |
-        pip install --upgradep pip
+        pip install --upgrade wheel
         pip install -e .[test]
 
     - name: Run Tests
