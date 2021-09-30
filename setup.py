@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+test_reqs = ['pytest>=6.2']
+
 setup(
     name='midi-hue',
     version='0.0.1',
@@ -15,8 +17,10 @@ setup(
         'python-mbedtls>=1.5',
         'requests>=2.26'
     ],
+    tests_require=test_reqs,
     extras_require={
-        'dev': ['flake8', 'autopep8']
+        'dev': ['flake8', 'autopep8'],
+        'test': test_reqs
     },
     entry_points={
         'console_scripts': ['midi-hue=midihue.cli:main']
