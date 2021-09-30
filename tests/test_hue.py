@@ -1,5 +1,49 @@
-from midihue.hue import HueStream
 import pytest
+from midihue.hue import HueClient, HueStream, DISCOVERY_URI
+
+
+@pytest.fixture
+def bridge_ip():
+    return '192.168.1.23'
+
+
+@pytest.fixture
+def username():
+    return 'asdoiga-weg-se9gseglksjg'
+
+
+@pytest.fixture
+def clientkey():
+    return '0aw9gzx0asadg-saegase08g9'
+
+
+@pytest.fixture
+def mock_api(bridge_ip, username, clientkey, requests_mock):
+    requests_mock.get(DISCOVERY_URI,
+                      json=[{'internalipaddress': bridge_ip}])
+    requests_mock.post(f'http:://{bridge_ip}/api',
+                       json=[{'username': username, 'clientkey': clientkey}])
+
+
+@pytest.mark.usefixtures('client', 'bridge_ip', 'mock_api')
+class TestHueClient:
+
+    @pytest.fixture
+    def client(self):
+        return HueClient()
+
+    def test_override_bridge_ip(self):
+        assert HueClient(bridge_ip='127.0.0.1').bridge_ip == '127.0.0.1'
+
+    def test_fetch_bridge_ip(self, client, bridge_ip):
+        assert client.bridge_ip == bridge_ip
+
+    def test_cache_bridge_ip(self, client, bridge_ip, requests_mock):
+        # Access once to fetch/cache
+        client.bridge_ip
+        requests_mock.get(DISCOVERY_URI,
+                          json=[{'internalipaddress': '0.0.0.0'}])
+        assert client.bridge_ip == bridge_ip
 
 
 class TestHueStreamMessage:
