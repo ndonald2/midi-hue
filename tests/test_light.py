@@ -60,8 +60,8 @@ class TestLight:
     @pytest.mark.parametrize(
         'value,expected_rgb',
         [
-            ((0.5, 1.0, 1.0), (0.5, 0.5, 1.0)),
-            ((-0.1, 5, -4), (1.0/3.0, 1.0, 1.0))
+            ((0.5, 1.0, 1.0), (0.0, 1.0, 1.0)),
+            ((-0.1, 1.2, 0.25), (0.25, 0.0, 0.0))
         ]
     )
     def test_set_hsv(self, light, value, expected_rgb):

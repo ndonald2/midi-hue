@@ -7,8 +7,6 @@ def _clampunit(i):
 
 
 RGB = namedtuple('RGB', ['r', 'g', 'b'])
-
-
 HSV = namedtuple('HSV', ['h', 's', 'v'])
 
 
@@ -60,8 +58,8 @@ class Light:
 
     @h.setter
     def h(self, value):
-        hsv = self.hsv
-        hsv.h = _clampunit(value)
+        hsv = list(self.hsv)
+        hsv[0] = _clampunit(value)
         self.rgb = hsv_to_rgb(*hsv)
 
     @property
@@ -70,8 +68,8 @@ class Light:
 
     @s.setter
     def s(self, value):
-        hsv = self.hsv
-        hsv.s = _clampunit(value)
+        hsv = list(self.hsv)
+        hsv[1] = _clampunit(value)
         self.rgb = hsv_to_rgb(*hsv)
 
     @property
@@ -80,8 +78,8 @@ class Light:
 
     @v.setter
     def v(self, value):
-        hsv = self.hsv
-        hsv.v = _clampunit(value)
+        hsv = list(self.hsv)
+        hsv[2] = _clampunit(value)
         self.rgb = hsv_to_rgb(*hsv)
 
     @property
@@ -91,7 +89,7 @@ class Light:
     @hsv.setter
     def hsv(self, value):
         assert len(value) == 3
-        self.rgb = rgb_to_hsv(
+        self.rgb = hsv_to_rgb(
             _clampunit(value[0]),
             _clampunit(value[1]),
             _clampunit(value[2])

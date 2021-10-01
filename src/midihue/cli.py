@@ -1,6 +1,7 @@
 import time
 import click
 import mido
+from .light import Light
 from .hue import HueClient, HueStream, DEFAULT_CREDENTIALS_PATH
 
 
@@ -57,23 +58,27 @@ def main(light_group, input_name, credentials_path):
 # Temporary hard coded mapping
 # Next big TODO: make this configurable
 def _loop(inport, stream):
-    v1 = 0
-    v2 = 0
-    v3 = 0
+    l1 = Light(3)
+    l2 = Light(4)
+    l3 = Light(10)
+
+    for light in (l1, l2, l3):
+        light.hsv = (0.0, 1.0, 1.0)
+        print(light.s)
 
     while True:
         for msg in inport.iter_pending():
             if msg.type == 'control_change':
                 if msg.control == 77:
-                    v1 = msg.value << 9
+                    l1.h = msg.value / 127.0
                 elif msg.control == 78:
-                    v2 = msg.value << 9
+                    l1.s = msg.value / 127.0
                 elif msg.control == 79:
-                    v3 = msg.value << 9
+                    l1.v = msg.value / 127.0
 
         streammsg = HueStream.Message()
-        streammsg.add(light_id=3, rgb=(0, v1, 0))
-        streammsg.add(light_id=4, rgb=(0, 0, v2))
-        streammsg.add(light_id=10, rgb=(v3, 0, 0))
+        for light in (l1, l2, l3):
+            streammsg.add(light.light_id, light.rgb_int)
+
         stream.send(streammsg)
         time.sleep(0.01)
