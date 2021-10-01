@@ -23,7 +23,7 @@ You can also try installing with `pip` but **currently this is not a good idea**
 the package isn't generally useful without code customizations for your own setup.
 
 ```
-pip install pip install https://github.com/ndonald2/midi-hue.git
+pip install https://github.com/ndonald2/midi-hue.git
 ```
 
 ## Usage
@@ -41,6 +41,6 @@ by default, but this can be overridden with a CLI flag (TODO: support environmen
 You will need at least one Entertainment Area setup on your Hue network, which can be done with
 the Hue mobile app(s). You will also need at least one MIDI input device on your computer.
 
-__⚠️  Note that at this point in time the MIDI->Hue mappings are using hard coded CC values and
+_⚠️  Note that at this point in time the MIDI->Hue mappings are using hard coded CC values and
 light IDs. Configurable mappings are coming soon but in the meantime you will need to change
-the code in `src/cli.py`__
+the code in `src/cli.py`_
