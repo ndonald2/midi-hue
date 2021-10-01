@@ -15,7 +15,7 @@ class TestHueClient:
 
     @pytest.fixture(scope='module')
     def clientkey(self):
-        return '0aw9gzx0asadg-saegase08g9'
+        return 'a3289feb34248c'
 
     @pytest.fixture(scope='module')
     def creds_path(self):
