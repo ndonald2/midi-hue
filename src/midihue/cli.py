@@ -12,7 +12,7 @@ from .hue import HueClient, HueStream, DEFAULT_CREDENTIALS_PATH
               type=click.Path(exists=False),
               help="Path to the file where Hue user credentials "
                    "are loaded/stored.")
-@click.option('--light-group',
+@click.option('--group-id',
               default=None,
               type=int,
               help="The ID of the light group you want to control "
@@ -22,12 +22,12 @@ from .hue import HueClient, HueStream, DEFAULT_CREDENTIALS_PATH
               type=str,
               help="The name of the MIDI input from which to "
                    "observe messages.")
-def main(light_group, input_name, credentials_path):
+def main(group_id, input_name, credentials_path):
     """Programmable MIDI control over Philips Hue lights"""
 
     client = HueClient(credentials_path=credentials_path)
 
-    if light_group is None:
+    if group_id is None:
         groups = client.get_entertainment_groups()
         if not groups:
             print("No Entertainment groups found on your Hue bridge. "
@@ -36,9 +36,9 @@ def main(light_group, input_name, credentials_path):
 
         groups_formatted = '\n'.join([f'{gid}. {desc}' for gid, desc
                                      in groups])
-        light_group = click.prompt('\nEnter ID of light group to control\n\n'
-                                   f'{groups_formatted}\n\nGroup ID',
-                                   type=int)
+        group_id = click.prompt('\nEnter ID of light group to control\n\n'
+                                f'{groups_formatted}\n\nGroup ID',
+                                type=int)
 
     if input_name is None:
         inputs = mido.get_input_names()
@@ -48,7 +48,7 @@ def main(light_group, input_name, credentials_path):
                                    f'{inputs_formatted}\n\nInput', type=int)
         input_name = inputs[input_index]
 
-    stream = HueStream(light_group, client)
+    stream = HueStream(group_id, client)
     inport = mido.open_input(input_name)
 
     stream.start()
