@@ -1,6 +1,7 @@
 import time
 import click
 import mido
+from . import effect
 from .light import Light
 from .hue import HueClient, HueStream, DEFAULT_CREDENTIALS_PATH
 
@@ -60,26 +61,15 @@ def main(group_id, input_name, credentials_path):
 # Temporary hard coded mapping
 # Next big TODO: make this configurable
 def _loop(inport, stream):
-    l1 = Light(3)
-    l2 = Light(4)
-    l3 = Light(10)
-
-    for light in (l1, l2, l3):
-        light.hsv = (0.0, 1.0, 1.0)
+    light = Light(3)
+    mapping = effect.DirectMapping(light)
 
     while True:
-        for msg in inport.iter_pending():
-            if msg.type == 'control_change':
-                if msg.control == 77:
-                    l1.h = msg.value / 127.0
-                elif msg.control == 78:
-                    l1.s = msg.value / 127.0
-                elif msg.control == 79:
-                    l1.v = msg.value / 127.0
+        msgs = list(inport.iter_pending())
+        mapping.process(msgs)
 
         streammsg = HueStream.Message()
-        for light in (l1, l2, l3):
-            streammsg.add(light.light_id, light.rgb_int)
+        streammsg.add(light.light_id, light.rgb_int)
 
         stream.send(streammsg)
         time.sleep(0.01)
