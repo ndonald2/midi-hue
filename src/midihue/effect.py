@@ -1,4 +1,34 @@
 
+class _MessageFilters:
+
+    class _Condition:
+
+        # Indicates filter param names that should always
+        # return as a match if absent. i.e. if there is no
+        # filter value for 'channel' any channel value is a match
+        WILCARD_NAMES = [
+            'channel',
+            'note'
+        ]
+
+        def __init__(self, name, value):
+            self.name = name
+            self.value = value
+
+        def __eq__(self, obj):
+            if self.value is None and self.name in self.WILCARD_NAMES:
+                return True
+            else:
+                return obj == self.value
+
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+    def __getattr__(self, name):
+        value = self.__dict__.get(name)
+        return self._Condition(name, value)
+
+
 class _BaseEffect:
 
     TARGET_ATTR_MAP = {
@@ -14,28 +44,25 @@ class _BaseEffect:
     def __init__(self, light, target, **kwargs):
         self.light = light
         self._target = self.TARGET_ATTR_MAP.get(target) or target
-        self.__dict__.update(kwargs)
+        self._filters = _MessageFilters(**kwargs)
 
     def process(self, messages):
         raise NotImplementedError
 
     def _should_handle_message(self, message):
         try:
-            if message.type != self.messagetype:
+            if message.type != self._filters.messagetype:
                 return False
 
-            if self.channel is not None and \
-                    message.channel != self.channel:
+            if message.channel != self._filters.channel:
                 return False
 
             if message.type == 'control_change':
-                if self.control is not None and \
-                        message.control != self.control:
+                if message.control != self._filters.control:
                     return False
 
             if message.type in ('note_on', 'note_off'):
-                if self.note is not None and \
-                        message.note != self.note:
+                if message.note != self._filters.note:
                     return False
 
             return True
@@ -65,6 +92,6 @@ class Direct(_BaseEffect):
         if not filtered:
             return
         msg = filtered[-1]
-        setattr(self.light,
-                self._target,
-                self._get_norm_value(msg) * self.scalefactor)
+        value = self._get_norm_value(msg)
+        if value is not None:
+            setattr(self.light, self._target, value * self.scalefactor)

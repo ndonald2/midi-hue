@@ -65,25 +65,13 @@ def _loop(inport, stream):
     mappings = [
         effect.Direct(light,
                       'saturation',
-                      channel=8,
                       messagetype='control_change',
                       control=77),
         effect.Direct(light,
                       'brightness',
-                      channel=8,
                       messagetype='control_change',
+                      channel=8,
                       control=78),
-        effect.Direct(light,
-                      'hue',
-                      scalefactor=0.2,
-                      channel=8,
-                      messagetype='note_on',
-                      note=73),
-        effect.Direct(light,
-                      'hue',
-                      channel=8,
-                      messagetype='note_off',
-                      note=73)
     ]
 
     while True:
