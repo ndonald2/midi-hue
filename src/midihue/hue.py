@@ -218,5 +218,6 @@ class HueStream:
         self._socket = dtls_cli
 
     def _disconnect(self):
-        self._socket.close()
-        self._socket = None
+        if self._socket is not None:
+            self._socket.close()
+            self._socket = None

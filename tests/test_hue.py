@@ -32,18 +32,13 @@ class TestHueClient:
         mopen = mocker.patch('builtins.open', mocker.mock_open(read_data=data))
         return mopen
 
-    @pytest.fixture
-    def client(self, creds_path, mock_api, mock_open):
-        return HueClient(credentials_path=creds_path)
-
-    @pytest.fixture
-    def client_auth(self, creds_path, mock_api, mock_open_auth):
-        return HueClient(credentials_path=creds_path)
-
     @pytest.fixture(autouse=True)
-    def mock_api(self, bridge_ip, username, clientkey, requests_mock):
+    def mock_discovery(self, bridge_ip, requests_mock):
         requests_mock.get(DISCOVERY_URI,
                           json=[{'internalipaddress': bridge_ip}])
+
+    @pytest.fixture(autouse=True)
+    def mock_create_user(self, bridge_ip, username, clientkey, requests_mock):
         requests_mock.post(f'http://{bridge_ip}/api',
                            json=[{
                                'success': {
@@ -51,6 +46,15 @@ class TestHueClient:
                                    'clientkey': clientkey
                                }
                            }])
+
+    @pytest.fixture
+    def client(self, creds_path, mock_discovery, mock_create_user, mock_open):
+        return HueClient(credentials_path=creds_path)
+
+    @pytest.fixture
+    def client_auth(self, creds_path, mock_discovery,
+                    mock_create_user, mock_open_auth):
+        return HueClient(credentials_path=creds_path)
 
     def test_override_bridge_ip(self, mock_open_auth):
         assert HueClient(bridge_ip='127.0.0.1').bridge_ip == '127.0.0.1'
@@ -90,6 +94,38 @@ class TestHueClient:
 
         assert client_auth.username == username
         assert client_auth.clientkey == clientkey
+
+    # TODO: fetch entertainment groups
+
+
+class TestHueStream:
+
+    @pytest.fixture
+    def group_id(self):
+        return 7
+
+    @pytest.fixture
+    def client_mock(self, mocker):
+        mock = mocker.MagicMock()
+        type(mock).clientkey = mocker.PropertyMock(return_value='deadbeef')
+        return mock
+
+    @pytest.fixture
+    def stream(self, group_id, client_mock, mocker):
+        mocker.patch('mbedtls.tls.DTLSConfiguration')
+        mocker.patch('mbedtls.tls.ClientContext')
+        return HueStream(group_id, client_mock)
+
+    def test_stores_group_id(self, group_id, stream):
+        assert stream.group_id == group_id
+
+    def test_start_enables_streaming(self, group_id, stream):
+        stream.start()
+        stream.client.set_stream_mode.assert_called_with(group_id, True)
+
+    def test_stop_disables_streaming(self, group_id, stream):
+        stream.stop()
+        stream.client.set_stream_mode.assert_called_with(group_id, False)
 
 
 class TestHueStreamMessage:
