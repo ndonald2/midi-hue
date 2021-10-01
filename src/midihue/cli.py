@@ -63,15 +63,15 @@ def main(group_id, input_name, credentials_path):
 def _loop(inport, stream):
     light = Light(3)
     mappings = [
-        effect.Direct(light,
-                      'saturation',
-                      messagetype='control_change',
-                      control=77),
-        effect.Direct(light,
-                      'brightness',
-                      messagetype='control_change',
-                      channel=8,
-                      control=78),
+        effect.DirectControlEffect(light,
+                                   'saturation',
+                                   messagetype='control_change',
+                                   control=77),
+        effect.DirectControlEffect(light,
+                                   'brightness',
+                                   messagetype='control_change',
+                                   channel=8,
+                                   control=78),
     ]
 
     while True:
