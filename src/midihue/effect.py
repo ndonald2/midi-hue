@@ -41,6 +41,12 @@ class _BaseEffect:
         'value': 'v'
     }
 
+    SUPPORTED_MESSAGE_TYPES = [
+        'control_change',
+        'note_on',
+        'note_off'
+    ]
+
     def __init__(self, light, target, **kwargs):
         self.light = light
         self._target = self.TARGET_ATTR_MAP.get(target) or target
@@ -50,25 +56,24 @@ class _BaseEffect:
         raise NotImplementedError
 
     def _should_handle_message(self, message):
-        try:
-            if message.type != self._filters.messagetype:
-                return False
-
-            if message.channel != self._filters.channel:
-                return False
-
-            if message.type == 'control_change':
-                if message.control != self._filters.control:
-                    return False
-
-            if message.type in ('note_on', 'note_off'):
-                if message.note != self._filters.note:
-                    return False
-
-            return True
-        except AttributeError as error:
-            print(error)
+        if message.type not in self.SUPPORTED_MESSAGE_TYPES:
             return False
+
+        if message.type != self._filters.messagetype:
+            return False
+
+        if message.channel != self._filters.channel:
+            return False
+
+        if message.type == 'control_change':
+            if message.control != self._filters.control:
+                return False
+
+        if message.type in ('note_on', 'note_off'):
+            if message.note != self._filters.note:
+                return False
+
+        return True
 
     def _get_norm_value(self, message):
         if message.type == 'control_change':
