@@ -41,7 +41,9 @@ def main(group_id, input_name, credentials_path):
                                 type=int)
 
     if input_name is None:
-        inputs = mido.get_input_names()
+        # quick and dirty dedupe until mido fix is released to pypi
+        # https://github.com/mido/mido/pull/321
+        inputs = list(dict.fromkeys(mido.get_input_names()))
         inputs_formatted = '\n'.join([f'{idx}. {name}' for idx, name
                                       in enumerate(inputs)])
         input_index = click.prompt(f'\nChoose a MIDI input\n\n'
