@@ -23,14 +23,12 @@ class TestHueClient:
 
     @pytest.fixture
     def mock_open(self, mocker):
-        mopen = mocker.patch('builtins.open', mocker.mock_open())
-        return mopen
+        return mocker.patch('builtins.open', mocker.mock_open())
 
     @pytest.fixture
     def mock_open_auth(self, mocker, username, clientkey):
         data = json.dumps({'username': username, 'clientkey': clientkey})
-        mopen = mocker.patch('builtins.open', mocker.mock_open(read_data=data))
-        return mopen
+        return mocker.patch('builtins.open', mocker.mock_open(read_data=data))
 
     @pytest.fixture(autouse=True)
     def mock_discovery(self, bridge_ip, requests_mock):
