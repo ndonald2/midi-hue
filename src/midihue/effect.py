@@ -1,17 +1,6 @@
 
 class _BaseEffect:
 
-    def __init__(self, light):
-        self.light = light
-        self.msg_type = None
-        self.msg_channel = None
-
-    def process(self, messages):
-        raise NotImplementedError
-
-
-class DirectMapping(_BaseEffect):
-
     TARGET_ATTR_MAP = {
         'red': 'r',
         'green': 'g',
@@ -22,20 +11,14 @@ class DirectMapping(_BaseEffect):
         'value': 'v'
     }
 
-    def __init__(self, light, target='brightness', **kwargs):
-        _BaseEffect.__init__(self, light)
+    def __init__(self, light, target, **kwargs):
+        self.light = light
+        self.target = self.TARGET_ATTR_MAP.get(target) or target
         self.msg_type = kwargs.get('messagetype') or 'control_change'
         self.msg_channel = kwargs.get('channel')
-        self.target = self.TARGET_ATTR_MAP.get(target) or target
 
     def process(self, messages):
-        # For this effect we only care about the most recent
-        # message that matches our criteria.
-        filtered = list(filter(self._filter, messages))
-        if not filtered:
-            return
-        msg = filtered[-1]
-        setattr(self.light, self.target, msg.value / 127.0)
+        raise NotImplementedError
 
     def _filter(self, message):
         try:
@@ -48,3 +31,18 @@ class DirectMapping(_BaseEffect):
         except AttributeError as error:
             print(error)
             return False
+
+
+class DirectMapping(_BaseEffect):
+
+    def __init__(self, light, target='brightness', **kwargs):
+        _BaseEffect.__init__(self, light, target, *kwargs)
+
+    def process(self, messages):
+        # For this effect we only care about the most recent
+        # message that matches the criteria.
+        filtered = list(filter(self._filter, messages))
+        if not filtered:
+            return
+        msg = filtered[-1]
+        setattr(self.light, self.target, msg.value / 127.0)
