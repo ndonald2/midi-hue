@@ -103,15 +103,15 @@ class TestHueStreamMessage:
     def header(self):
         return HueStream.Message._HEADER
 
+    @pytest.fixture
+    def message(self):
+        return HueStream.Message()
+
     def test_header_protocolname(self, header):
         assert header.startswith(b'HueStream')
 
     def test_header_apiversion(self, header):
         assert header[9:11] == b'\x01\x00'
-
-    @pytest.fixture
-    def message(self):
-        return HueStream.Message()
 
     def test_message_startswith_header(self, message, header):
         assert message.bytes.startswith(header)
