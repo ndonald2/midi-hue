@@ -64,7 +64,6 @@ def _loop(inport, stream):
 
     for light in (l1, l2, l3):
         light.hsv = (0.0, 1.0, 1.0)
-        print(light.s)
 
     while True:
         for msg in inport.iter_pending():
