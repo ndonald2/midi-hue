@@ -3,40 +3,23 @@ import json
 from midihue.hue import HueClient, HueStream, DISCOVERY_URI
 
 
-@pytest.fixture
-def bridge_ip():
-    return '123.456.789.23'
-
-
-@pytest.fixture
-def username():
-    return 'asdoiga-weg-se9gseglksjg'
-
-
-@pytest.fixture
-def clientkey():
-    return '0aw9gzx0asadg-saegase08g9'
-
-
-@pytest.fixture
-def creds_path():
-    return '/tmp/huecreds'
-
-
-@pytest.fixture
-def mock_api(bridge_ip, username, clientkey, requests_mock):
-    requests_mock.get(DISCOVERY_URI,
-                      json=[{'internalipaddress': bridge_ip}])
-    requests_mock.post(f'http://{bridge_ip}/api',
-                       json=[{
-                           'success': {
-                               'username': username,
-                               'clientkey': clientkey
-                            }}])
-
-
-@pytest.mark.usefixtures('mock_api')
 class TestHueClient:
+
+    @pytest.fixture(scope='module')
+    def bridge_ip(self):
+        return '123.456.789.23'
+
+    @pytest.fixture(scope='module')
+    def username(self):
+        return 'asdoiga-weg-se9gseglksjg'
+
+    @pytest.fixture(scope='module')
+    def clientkey(self):
+        return '0aw9gzx0asadg-saegase08g9'
+
+    @pytest.fixture(scope='module')
+    def creds_path(self):
+        return '/tmp/huecreds'
 
     @pytest.fixture
     def mock_open(self, mocker):
@@ -56,6 +39,18 @@ class TestHueClient:
     @pytest.fixture
     def client_auth(self, creds_path, mock_api, mock_open_auth):
         return HueClient(credentials_path=creds_path)
+
+    @pytest.fixture(autouse=True)
+    def mock_api(self, bridge_ip, username, clientkey, requests_mock):
+        requests_mock.get(DISCOVERY_URI,
+                          json=[{'internalipaddress': bridge_ip}])
+        requests_mock.post(f'http://{bridge_ip}/api',
+                           json=[{
+                               'success': {
+                                   'username': username,
+                                   'clientkey': clientkey
+                               }
+                           }])
 
     def test_override_bridge_ip(self, mock_open_auth):
         assert HueClient(bridge_ip='127.0.0.1').bridge_ip == '127.0.0.1'
