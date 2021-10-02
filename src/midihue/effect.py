@@ -10,8 +10,8 @@ class _BaseEffect:
     supported_message_types = []
     discard_redundant_messages = False
 
-    def __init__(self, light):
-        self.light = light
+    def __init__(self, lights):
+        self.lights = lights
 
     def process(self, messages):
         filtered = list(filter(self.should_handle_message, messages))
@@ -91,8 +91,8 @@ class _ControlEffect(_BaseEffect):
             value = self._raw.get(name) or self._raw.get(alt_key)
             return self._Condition(name, value)
 
-    def __init__(self, light, **kwargs):
-        super(_ControlEffect, self).__init__(light)
+    def __init__(self, lights, **kwargs):
+        super(_ControlEffect, self).__init__(lights)
         self._filters = self._MessageFilters(**kwargs)
 
     def should_handle_message(self, message):
@@ -119,7 +119,7 @@ class _TriggeredEffect(_ControlEffect):
     pass
 
 
-# Direct control over a single light attribute
+# Direct control over a single attribute of one or more lights
 class DirectControlEffect(_ControlEffect):
 
     TARGET_ATTR_MAP = {
@@ -134,15 +134,16 @@ class DirectControlEffect(_ControlEffect):
 
     discard_redundant_messages = True
 
-    def __init__(self, light, target, scalefactor=1.0, **kwargs):
-        super(DirectControlEffect, self).__init__(light, **kwargs)
+    def __init__(self, lights, target, scalefactor=1.0, **kwargs):
+        super(DirectControlEffect, self).__init__(lights, **kwargs)
         self._target = self.TARGET_ATTR_MAP.get(target) or target
         self.scalefactor = scalefactor
 
     def handle_message(self, message):
         value = self._get_norm_value(message)
         if value is not None:
-            setattr(self.light, self._target, value * self.scalefactor)
+            for light in self.lights:
+                setattr(light, self._target, value * self.scalefactor)
 
     def _get_norm_value(self, message):
         if message.type == 'control_change':

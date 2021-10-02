@@ -61,26 +61,28 @@ def main(group_id, input_name, credentials_path):
 # Temporary hard coded mapping
 # Next big TODO: make this configurable
 def _loop(inport, stream):
-    light = Light(3)
-    mappings = [
-        effect.DirectControlEffect(light,
+    lights = [Light(3), Light(4), Light(10)]
+    effects = [
+        effect.DirectControlEffect(lights,
                                    'saturation',
                                    messagetype='control_change',
+                                   channel=8,
                                    control=77),
-        effect.DirectControlEffect(light,
+        effect.DirectControlEffect(lights,
                                    'brightness',
                                    messagetype='control_change',
                                    channel=8,
-                                   control=78),
+                                   controls=(78)),
     ]
 
     while True:
         msgs = list(inport.iter_pending())
-        for mpg in mappings:
-            mpg.process(msgs)
+        for eff in effects:
+            eff.process(msgs)
 
         streammsg = HueStream.Message()
-        streammsg.add(light.light_id, light.rgb_int)
+        for light in lights:
+            streammsg.add(light.light_id, light.rgb_int)
 
         stream.send(streammsg)
         time.sleep(0.01)
