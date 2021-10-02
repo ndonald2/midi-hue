@@ -60,18 +60,33 @@ class _ControlEffect(_BaseEffect):
             WILCARD_NAMES = [
                 'channel',
                 'control',
-                'note'
+                'controls',
+                'note',
+                'notes'
             ]
 
             def __init__(self, name, value):
                 self.name = name
                 self.value = value
 
+            # Overridden to return true if the compared object matches
+            # `value` OR if the condition has no value (wildcard)
             def __eq__(self, obj):
                 if self.value is None and self.name in self.WILCARD_NAMES:
                     return True
                 else:
                     return obj == self.value
+
+            # Overridden to enable wildcarding of multiple values
+            def __iter__(self):
+                if self.value is None and self.name in self.WILCARD_NAMES:
+                    return ().__iter__()
+                return self.value.__iter__()
+
+            def __next__(self):
+                if self.value is None and self.name in self.WILCARD_NAMES:
+                    return ().__next__()
+                return self.value.__next__()
 
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
@@ -95,10 +110,12 @@ class _ControlEffect(_BaseEffect):
             return False
 
         if message.type == 'control_change':
-            if message.control != self._filters.control:
+            if message.control not in self._filters.controls and \
+                   message.control != self._filters.control:
                 return False
         elif message.type in ('note_on', 'note_off'):
-            if message.note != self._filters.note:
+            if message.note not in self._filters.notes and \
+                    message.note != self._filters.note:
                 return False
 
         return True
