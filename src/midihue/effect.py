@@ -32,6 +32,8 @@ class _BaseEffect:
 
 class _ClockEffect(_BaseEffect):
 
+    PPQN = 24
+
     supported_message_types = [
         'clock',
         'start',
@@ -52,6 +54,12 @@ class _ControlEffect(_BaseEffect):
 
     class _MessageFilters:
 
+        PLURAL_MAPPINGS = {
+            'channels': 'channel',
+            'controls': 'control',
+            'notes': 'note'
+        }
+
         class _Condition:
 
             # Indicates filter param names that should always
@@ -60,39 +68,27 @@ class _ControlEffect(_BaseEffect):
             WILCARD_NAMES = [
                 'channel',
                 'control',
-                'controls',
-                'note',
-                'notes'
+                'note'
             ]
 
             def __init__(self, name, value):
                 self.name = name
                 self.value = value
 
-            # Overridden to return true if the compared object matches
-            # `value` OR if the condition has no value (wildcard)
-            def __eq__(self, obj):
+            def matches(self, obj):
                 if self.value is None and self.name in self.WILCARD_NAMES:
                     return True
-                else:
+                try:
+                    return obj in self.value
+                except TypeError:
                     return obj == self.value
 
-            # Overridden to enable wildcarding of multiple values
-            def __iter__(self):
-                if self.value is None and self.name in self.WILCARD_NAMES:
-                    return ().__iter__()
-                return self.value.__iter__()
-
-            def __next__(self):
-                if self.value is None and self.name in self.WILCARD_NAMES:
-                    return ().__next__()
-                return self.value.__next__()
-
         def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
+            self._raw = kwargs
 
         def __getattr__(self, name):
-            value = self.__dict__.get(name)
+            alt_key = self.PLURAL_MAPPINGS.get(name)
+            value = self._raw.get(name) or self._raw.get(alt_key)
             return self._Condition(name, value)
 
     def __init__(self, light, **kwargs):
@@ -103,19 +99,17 @@ class _ControlEffect(_BaseEffect):
         if not super(_ControlEffect, self).should_handle_message(message):
             return False
 
-        if message.type != self._filters.messagetype:
+        if not self._filters.messagetype.matches(message.type):
             return False
 
-        if message.channel != self._filters.channel:
+        if not self._filters.channel.matches(message.channel):
             return False
 
         if message.type == 'control_change':
-            if message.control not in self._filters.controls and \
-                   message.control != self._filters.control:
+            if not self._filters.controls.matches(message.control):
                 return False
         elif message.type in ('note_on', 'note_off'):
-            if message.note not in self._filters.notes and \
-                    message.note != self._filters.note:
+            if not self._filters.notes.matches(message.note):
                 return False
 
         return True
